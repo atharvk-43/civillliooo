@@ -4,9 +4,13 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Users, Shield, Wrench, ChevronRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useUser } from '@/lib/user-context'
 
 export default function AuthPortal() {
   const [selectedType, setSelectedType] = useState<'citizen' | 'leader' | 'worker' | null>(null)
+  const router = useRouter()
+  const { login } = useUser()
 
   const authTypes = [
     {
@@ -53,9 +57,8 @@ export default function AuthPortal() {
             return (
               <Card
                 key={type.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${
-                  selectedType === type.id ? 'ring-2 ring-primary' : ''
-                } ${type.color} border`}
+                className={`cursor-pointer transition-all hover:shadow-lg ${selectedType === type.id ? 'ring-2 ring-primary' : ''
+                  } ${type.color} border`}
                 onClick={() => setSelectedType(type.id as any)}
               >
                 <CardHeader>
@@ -132,17 +135,21 @@ export default function AuthPortal() {
                 <div className="space-y-3">
                   <Button
                     onClick={() => {
-                      const paths = {
-                        citizen: '/auth/citizen',
-                        leader: '/auth/leader',
-                        worker: '/auth/worker',
+                      if (selectedType === 'citizen') {
+                        login('citizen')
+                        router.push('/citizen-portal')
+                      } else if (selectedType === 'leader') {
+                        login('citizen-leader')
+                        router.push('/citizen-leader/dashboard')
+                      } else if (selectedType === 'worker') {
+                        login('worker')
+                        router.push('/worker/dashboard')
                       }
-                      window.location.href = paths[selectedType]
                     }}
                     className="w-full"
                     size="lg"
                   >
-                    Continue to {authTypes.find(t => t.id === selectedType)?.title} Login
+                    Continue to {authTypes.find(t => t.id === selectedType)?.title} Portal
                     <ChevronRight className="h-5 w-5 ml-2" />
                   </Button>
                   <Button

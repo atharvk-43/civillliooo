@@ -40,7 +40,7 @@ export function UniversalLoginForm() {
 
       setSuccess(true)
       setTimeout(() => {
-        router.push("/app/dashboard")
+        router.push("/auth/portal")
       }, 1000)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")

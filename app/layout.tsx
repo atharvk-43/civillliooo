@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { UserProvider } from "@/lib/user-context"
+import { Chatbot } from "@/components/ui/chatbot"
 
 const _geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const _geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
@@ -39,7 +40,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${_geist.variable} ${_geistMono.variable} font-sans antialiased`}>
-        <UserProvider>{children}</UserProvider>
+        <UserProvider>
+          {children}
+          <Chatbot />
+        </UserProvider>
         <Analytics />
       </body>
     </html>
