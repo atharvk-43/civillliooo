@@ -1,12 +1,16 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "civilio",
+  "version": "1.0.0",
+  "description": "Enterprise-grade platform for city management, real-time dashboards, and citizen engagement",
+  "author": "Civilio Team",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/huggingface": "^1.0.37",

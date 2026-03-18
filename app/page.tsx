@@ -2,7 +2,7 @@
 
 import { useUser } from "@/lib/user-context"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { AppHeader } from "@/components/layout/app-header"
 import { PageContainer } from "@/components/layout/page-container"
 import { ModuleGrid } from "@/components/dashboard/module-grid"
@@ -12,13 +12,20 @@ export default function HomePage() {
   const { role } = useUser()
   const router = useRouter()
 
+  // Memoize the effect dependency to prevent unnecessary redirects
+  const shouldRedirect = useMemo(() => {
+    if (!role) return "login"
+    if (role === "citizen-leader") return "citizen-leader"
+    return null
+  }, [role])
+
   useEffect(() => {
-    if (!role) {
+    if (shouldRedirect === "login") {
       router.push("/login")
-    } else if (role === "citizen-leader") {
+    } else if (shouldRedirect === "citizen-leader") {
       router.push("/citizen-leader/dashboard")
     }
-  }, [role, router])
+  }, [shouldRedirect, router])
 
   // Show dashboard only for non-logged-in state or while checking auth
   if (!role || role === "citizen-leader") {
