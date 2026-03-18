@@ -1,0 +1,58 @@
+{
+    "name": "Civillio",
+    "short_name": "Civillio",
+    "description": "India's Smart Civic Services Platform — Government Documents, Grievances, Civil ERP & AI Assistant",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f0f1a",
+    "theme_color": "#6d28d9",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "en-IN",
+    "categories": [
+        "government",
+        "productivity",
+        "utilities"
+    ],
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "CiviBot AI",
+            "short_name": "CiviBot",
+            "description": "Open CiviBot AI assistant",
+            "url": "/?civibot=open",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Submit Grievance",
+            "short_name": "Grievance",
+            "description": "Submit a civic grievance",
+            "url": "/grievances",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}
