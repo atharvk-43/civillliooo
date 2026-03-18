@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   title: "Civilio | City Operations & Management Platform",
   description: "Enterprise-grade platform for city management, real-time dashboards, and citizen engagement",
   generator: "v0.app",
+  keywords: ["city management", "civic engagement", "governance", "public services"],
+  authors: [{ name: "Civilio Team" }],
   icons: {
     icon: [
       {
@@ -30,6 +32,22 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+  openGraph: {
+    title: "Civilio - Smart City Platform",
+    description: "Unified platform for city operations, governance, and citizen engagement",
+    type: "website",
+  },
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8f8f8" },
+    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+  ],
 }
 
 export default function RootLayout({
