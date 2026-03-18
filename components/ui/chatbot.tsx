@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { useChat } from "@ai-sdk/react"
 import { X, Send, User } from "lucide-react"
 import { Button } from "./button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "./card"
@@ -29,11 +28,17 @@ const CiviBotIcon = ({ className }: { className?: string }) => (
     </svg>
 )
 
+type Message = {
+    id: string
+    role: "user" | "assistant"
+    content: string
+}
+
 export function Chatbot() {
     const [isOpen, setIsOpen] = useState(false)
     const [input, setInput] = useState("")
-    const { messages, sendMessage, status } = useChat()
-    const isLoading = status === 'submitted' || status === 'streaming'
+    const [messages, setMessages] = useState<Message[]>([])
+    const [isLoading, setIsLoading] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -41,6 +46,74 @@ export function Chatbot() {
             scrollRef.current.scrollIntoView({ behavior: "smooth" })
         }
     }, [messages, isLoading])
+
+    const sendMessage = async () => {
+        const text = input.trim()
+        if (!text || isLoading) return
+
+        const userMessage: Message = { id: Date.now().toString(), role: "user", content: text }
+        setMessages(prev => [...prev, userMessage])
+        setInput("")
+        setIsLoading(true)
+
+        // Build history for context
+        const history = [...messages, userMessage].map(m => ({
+            role: m.role,
+            parts: [{ type: "text", text: m.content }]
+        }))
+
+        const assistantId = (Date.now() + 1).toString()
+        setMessages(prev => [...prev, { id: assistantId, role: "assistant", content: "" }])
+
+        try {
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: history })
+            })
+
+            if (!response.ok || !response.body) {
+                setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: "Sorry, something went wrong. Please try again." } : m))
+                setIsLoading(false)
+                return
+            }
+
+            const reader = response.body.getReader()
+            const decoder = new TextDecoder()
+            let buffer = ""
+
+            while (true) {
+                const { done, value } = await reader.read()
+                if (done) break
+
+                buffer += decoder.decode(value, { stream: true })
+                const lines = buffer.split("\n")
+                buffer = lines.pop() ?? ""
+
+                for (const line of lines) {
+                    if (!line.startsWith("data: ")) continue
+                    const raw = line.slice(6).trim()
+                    if (raw === "[DONE]") continue
+                    try {
+                        const parsed = JSON.parse(raw)
+                        if (parsed.type === "text-delta" && parsed.delta) {
+                            setMessages(prev => prev.map(m =>
+                                m.id === assistantId
+                                    ? { ...m, content: m.content + parsed.delta }
+                                    : m
+                            ))
+                        }
+                    } catch {
+                        // skip malformed lines
+                    }
+                }
+            }
+        } catch {
+            setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: "Network error. Please check your connection." } : m))
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     return (
         <>
@@ -86,37 +159,33 @@ export function Chatbot() {
                                 </div>
                             ) : (
                                 <div className="space-y-6">
-                                    {messages.map((m: any) => (
-                                        <div
-                                            key={m.id}
-                                            className={`flex gap-3 text-sm ${m.role === 'user' ? 'justify-end' : 'justify-start'
-                                                }`}
-                                        >
-                                            {m.role === 'assistant' && (
-                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center shrink-0 border border-purple-500/20 shadow-sm mt-auto">
-                                                    <CiviBotIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                                                </div>
-                                            )}
-
+                                    {messages.map((m) => {
+                                        if (!m.content && m.role === "assistant") return null
+                                        return (
                                             <div
-                                                className={`px-4 py-2.5 rounded-2xl max-w-[85%] shadow-sm leading-relaxed ${m.role === 'user'
-                                                    ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-br-sm'
-                                                    : 'bg-background border border-border/40 rounded-bl-sm'
-                                                    }`}
+                                                key={m.id}
+                                                className={`flex gap-3 text-sm ${m.role === "user" ? "justify-end" : "justify-start"}`}
                                             >
-                                                {m.parts.map((part: any, i: number) => (
-                                                    part.type === 'text' ? <span key={i} className="whitespace-pre-wrap">{part.text}</span> : null
-                                                ))}
-                                            </div>
-
-                                            {m.role === 'user' && (
-                                                <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0 border border-primary/20 shadow-sm mt-auto">
-                                                    <User className="h-4 w-4 text-primary" />
+                                                {m.role === "assistant" && (
+                                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center shrink-0 border border-purple-500/20 shadow-sm mt-auto">
+                                                        <CiviBotIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                                    </div>
+                                                )}
+                                                <div className={`px-4 py-2.5 rounded-2xl max-w-[85%] shadow-sm leading-relaxed ${m.role === "user"
+                                                    ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-br-sm"
+                                                    : "bg-background border border-border/40 rounded-bl-sm"}`}
+                                                >
+                                                    <span className="whitespace-pre-wrap">{m.content}</span>
                                                 </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {isLoading && (
+                                                {m.role === "user" && (
+                                                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0 border border-primary/20 shadow-sm mt-auto">
+                                                        <User className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                    {isLoading && messages[messages.length - 1]?.content === "" && (
                                         <div className="flex gap-3 text-sm justify-start">
                                             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center shrink-0 border border-purple-500/20 shadow-sm mt-auto">
                                                 <CiviBotIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
@@ -138,20 +207,17 @@ export function Chatbot() {
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault()
-                                if (!input.trim() || isLoading) return
-                                sendMessage({
-                                    role: 'user',
-                                    parts: [{ type: 'text', text: input }]
-                                })
-                                setInput("")
+                                sendMessage()
                             }}
                             className="flex relative items-center w-full focus-within:ring-2 focus-within:ring-purple-500/50 rounded-full transition-all bg-muted border border-border/40 shadow-inner"
                         >
                             <Input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
                                 className="pr-12 py-6 rounded-full border-transparent bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 border-0 shadow-none text-sm"
                                 placeholder="Message CiviBot..."
+                                disabled={isLoading}
                             />
                             <Button
                                 type="submit"
