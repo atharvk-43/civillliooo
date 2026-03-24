@@ -53,16 +53,37 @@ export async function POST(request: NextRequest) {
         const supabase = getAdminClient()
         const body = await request.json()
 
-        const {
-            title, description, category, priority = 'medium',
-            location, ward, pincode,
-            complainant_name, complainant_email, complainant_phone
-        } = body
+        // Support both the form field names AND the direct API field names
+        const complainant_name = body.complainant_name || body.citizenName || body.name
+        const complainant_email = body.complainant_email || body.email
+        const complainant_phone = body.complainant_phone || body.phone
+        const location = body.zone
+            ? `${body.location}, ${body.zone}`
+            : (body.location || '')
+        const rawCategory = body.category || body.issueType || ''
+        const title = body.title || rawCategory
+        const description = body.description || ''
+        const priority = body.priority || 'medium'
+        const ward = body.ward || body.zone || null
+        const pincode = body.pincode || null
+
+        // Map display category names to DB enum values
+        const categoryMap: Record<string, string> = {
+            'road & infrastructure': 'roads', 'road': 'roads', 'roads': 'roads',
+            'water supply': 'water', 'water': 'water',
+            'street lighting': 'electricity', 'utilities': 'electricity', 'electricity': 'electricity',
+            'waste management': 'sanitation', 'sanitation': 'sanitation',
+            'traffic & parking': 'public_safety', 'public health': 'public_safety', 'public_safety': 'public_safety',
+            'noise pollution': 'noise', 'noise': 'noise',
+            'building permit': 'permits', 'permits': 'permits',
+            'parks': 'parks',
+        }
+        const category = categoryMap[rawCategory.toLowerCase()] || 'other'
 
         // Validation
-        if (!title || !description || !category || !location || !complainant_name) {
+        if (!title || !description || !location || !complainant_name) {
             return NextResponse.json(
-                { error: 'Missing required fields: title, description, category, location, complainant_name', success: false },
+                { error: 'Missing required fields: title/category, description, location, name', success: false },
                 { status: 400 }
             )
         }
@@ -74,8 +95,8 @@ export async function POST(request: NextRequest) {
             status: 'pending',
             priority,
             location,
-            ward: ward || null,
-            pincode: pincode || null,
+            ward,
+            pincode,
             complainant_name,
             complainant_email: complainant_email || null,
             complainant_phone: complainant_phone || null,

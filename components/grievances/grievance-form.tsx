@@ -79,7 +79,7 @@ export function GrievanceForm({ onSubmit }: GrievanceFormProps) {
       const result = await response.json()
 
       if (result.success) {
-        setGrievanceId(result.data.id)
+        setGrievanceId(result.data.tracking_id || result.data.id)
         setSubmitted(true)
         
         // Call optional callback
@@ -118,17 +118,19 @@ export function GrievanceForm({ onSubmit }: GrievanceFormProps) {
     return (
       <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-lg p-8 text-center">
         <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-2">Grievance Submitted Successfully</h3>
+        <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-2">
+          Grievance Submitted Successfully! 🎉
+        </h3>
         {grievanceId && (
-          <p className="text-green-800 dark:text-green-200 mb-2 font-mono">
-            <strong>Grievance ID: {grievanceId}</strong>
+          <p className="text-green-800 dark:text-green-200 mb-2 font-mono text-lg bg-green-100 dark:bg-green-900/50 px-4 py-2 rounded-lg inline-block">
+            <strong>{grievanceId}</strong>
           </p>
         )}
-        <p className="text-green-800 dark:text-green-200 mb-4">
-          Thank you for submitting your complaint. A confirmation email has been sent to your email address with tracking details.
+        <p className="text-green-800 dark:text-green-200 mb-2 text-sm">
+          Your grievance has been saved to the database. Use the tracking ID above to check status.
         </p>
         <p className="text-sm text-green-700 dark:text-green-300">
-          You can track the progress on your dashboard anytime.
+          Switch to the <strong>"Track Status"</strong> tab to see it appear in real-time ↗
         </p>
       </div>
     )
