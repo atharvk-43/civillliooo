@@ -1,0 +1,28 @@
+{
+    "appId": "com.civillio.app",
+    "appName": "Civillio",
+    "webDir": "out",
+    "server": {
+        "url": "https://starlit-sawine-f8c894.netlify.app",
+        "cleartext": false,
+        "androidScheme": "https"
+    },
+    "android": {
+        "buildOptions": {
+            "releaseType": "APK"
+        }
+    },
+    "plugins": {
+        "SplashScreen": {
+            "launchShowDuration": 2000,
+            "backgroundColor": "#0f0f1a",
+            "androidSplashResourceName": "splash",
+            "androidScaleType": "CENTER_CROP",
+            "showSpinner": false
+        },
+        "StatusBar": {
+            "style": "DARK",
+            "backgroundColor": "#6d28d9"
+        }
+    }
+}
