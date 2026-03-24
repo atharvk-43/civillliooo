@@ -103,7 +103,7 @@ INSERT INTO work_orders (title, description, status, priority, category, assigne
 ('Water Pipeline Inspection - Green Park', 'Inspect and repair water pipeline serving Green Park Colony', 'open', 'high', 'Water Supply', 'Water Works Team B', 45000, '2026-03-28'),
 ('Street Light Replacement - Ring Road', 'Replace 18 non-functional street lights on Ring Road Sector 4', 'open', 'medium', 'Electricity', 'DISCOM Team 3', 120000, '2026-04-05'),
 ('Garbage Pickup Schedule Enforcement', 'Enforce daily garbage collection in Shanti Nagar Ward 7', 'completed', 'high', 'Sanitation', 'Sanitation Squad 2', 15000, '2026-03-20'),
-('Illegal Construction Demolition Notice', 'Issue legal notice and coordinate demolition of unauthorized structure', 'in_progress', 'critical', 'Enforcement', 'Enforcement Wing A', 5000, '2026-03-25');
+('Illegal Construction Demolition Notice', 'Issue legal notice and coordinate demolition of unauthorized structure', 'in_progress', 'high', 'Enforcement', 'Enforcement Wing A', 5000, '2026-03-25');
 
 INSERT INTO employees (employee_id, full_name, email, phone, department, designation, joining_date, salary) VALUES
 ('EMP-001', 'Arun Sharma', 'arun.sharma@civillio.gov.in', '+91 98765 43210', 'Administration', 'Chief Administrator', '2020-01-15', 125000),
