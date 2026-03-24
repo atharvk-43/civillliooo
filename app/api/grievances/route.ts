@@ -1,155 +1,128 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createGrievance, getAllGrievances, getGrievancesByEmail, createAuditLog, updateGrievanceStatus } from "@/lib/database"
-import { sendGrievanceConfirmation, sendGrievanceStatusUpdate } from "@/lib/email"
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
+function getAdminClient() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !serviceKey) {
+        throw new Error('Missing Supabase environment variables')
+    }
+    return createClient(url, serviceKey)
+}
+
+function generateTrackingId(): string {
+    const year = new Date().getFullYear()
+    const random = Math.floor(Math.random() * 900000) + 100000
+    return `CIV-${year}-${random}`
+}
+
+// GET /api/grievances — fetch all with filters
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const email = searchParams.get("email")
-    const limit = parseInt(searchParams.get("limit") || "50")
-    const offset = parseInt(searchParams.get("offset") || "0")
+    try {
+        const supabase = getAdminClient()
+        const { searchParams } = new URL(request.url)
+        const status = searchParams.get('status')
+        const category = searchParams.get('category')
+        const priority = searchParams.get('priority')
+        const limit = parseInt(searchParams.get('limit') ?? '50')
+        const offset = parseInt(searchParams.get('offset') ?? '0')
 
-    let grievances
-    if (email) {
-      grievances = await getGrievancesByEmail(email)
-    } else {
-      grievances = await getAllGrievances(limit, offset)
+        let query = supabase
+            .from('grievances')
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1)
+
+        if (status) query = query.eq('status', status)
+        if (category) query = query.eq('category', category)
+        if (priority) query = query.eq('priority', priority)
+
+        const { data, error, count } = await query
+
+        if (error) throw error
+
+        return NextResponse.json({ data, count, success: true })
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message, success: false }, { status: 500 })
     }
-
-    return NextResponse.json({
-      success: true,
-      data: grievances,
-      count: grievances.length,
-    })
-  } catch (error) {
-    console.error("[API] Error fetching grievances:", error)
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch grievances", details: String(error) },
-      { status: 500 }
-    )
-  }
 }
 
+// POST /api/grievances — create new grievance
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-
-    // Validate required fields
-    if (!body.citizenName || !body.email || !body.category || !body.description || !body.location) {
-      return NextResponse.json(
-        { success: false, error: "Missing required fields" },
-        { status: 400 }
-      )
-    }
-
-    // Create grievance in database
-    const newGrievance = await createGrievance({
-      citizenName: body.citizenName,
-      email: body.email,
-      phone: body.phone || "",
-      category: body.category,
-      title: body.title || body.category,
-      description: body.description,
-      location: body.location,
-      priority: body.priority || "medium",
-      attachments: body.attachments || [],
-    })
-
-    // Create audit log entry
     try {
-      await createAuditLog({
-        grievanceId: newGrievance.id,
-        action: "grievance_created",
-        actor: body.email,
-        details: `Grievance submitted: ${body.description.substring(0, 100)}...`,
-      })
-    } catch (auditError) {
-      console.warn("[API] Warning: Could not create audit log:", auditError)
-    }
+        const supabase = getAdminClient()
+        const body = await request.json()
 
-    // Send confirmation email
-    try {
-      await sendGrievanceConfirmation(
-        body.email,
-        newGrievance.id,
-        body.title || body.category,
-        body.category
-      )
-    } catch (emailError) {
-      console.warn("[API] Warning: Could not send confirmation email:", emailError)
-    }
+        const {
+            title, description, category, priority = 'medium',
+            location, ward, pincode,
+            complainant_name, complainant_email, complainant_phone
+        } = body
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: newGrievance,
-        message: "Grievance submitted successfully.",
-      },
-      { status: 201 }
-    )
-  } catch (error) {
-    console.error("[API] Grievance submission error:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to submit grievance",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
-    )
-  }
+        // Validation
+        if (!title || !description || !category || !location || !complainant_name) {
+            return NextResponse.json(
+                { error: 'Missing required fields: title, description, category, location, complainant_name', success: false },
+                { status: 400 }
+            )
+        }
+
+        const newGrievance = {
+            title,
+            description,
+            category,
+            status: 'pending',
+            priority,
+            location,
+            ward: ward || null,
+            pincode: pincode || null,
+            complainant_name,
+            complainant_email: complainant_email || null,
+            complainant_phone: complainant_phone || null,
+            tracking_id: generateTrackingId(),
+        }
+
+        const { data, error } = await supabase
+            .from('grievances')
+            .insert([newGrievance])
+            .select()
+            .single()
+
+        if (error) throw error
+
+        return NextResponse.json({ data, success: true }, { status: 201 })
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message, success: false }, { status: 500 })
+    }
 }
 
+// PATCH /api/grievances — update grievance status
 export async function PATCH(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { grievanceId, status, notes, email } = body
-
-    if (!grievanceId || !status) {
-      return NextResponse.json(
-        { success: false, error: "Missing grievanceId or status" },
-        { status: 400 }
-      )
-    }
-
-    // Update grievance status in database
-    const updatedGrievance = await updateGrievanceStatus(grievanceId, status, notes)
-
-    // Create audit log
     try {
-      await createAuditLog({
-        grievanceId,
-        action: "status_updated",
-        actor: "admin",
-        details: `Status updated to ${status}. ${notes || ""}`,
-      })
-    } catch (auditError) {
-      console.warn("[API] Warning: Could not create audit log:", auditError)
-    }
+        const supabase = getAdminClient()
+        const body = await request.json()
+        const { id, ...updates } = body
 
-    // Send status update email if email provided
-    if (body.email) {
-      try {
-        await sendGrievanceStatusUpdate(body.email, grievanceId, status, notes || "")
-      } catch (emailError) {
-        console.warn("[API] Warning: Could not send status update email:", emailError)
-      }
-    }
+        if (!id) {
+            return NextResponse.json({ error: 'Missing grievance id', success: false }, { status: 400 })
+        }
 
-    return NextResponse.json({
-      success: true,
-      data: updatedGrievance,
-      message: "Grievance status updated successfully",
-    })
-  } catch (error) {
-    console.error("[API] Error updating grievance:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to update grievance",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
-    )
-  }
+        // Auto-set resolved_at timestamp
+        if (updates.status === 'resolved' && !updates.resolved_at) {
+            updates.resolved_at = new Date().toISOString()
+        }
+
+        const { data, error } = await supabase
+            .from('grievances')
+            .update({ ...updates, updated_at: new Date().toISOString() })
+            .eq('id', id)
+            .select()
+            .single()
+
+        if (error) throw error
+
+        return NextResponse.json({ data, success: true })
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message, success: false }, { status: 500 })
+    }
 }
