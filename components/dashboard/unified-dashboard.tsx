@@ -7,34 +7,20 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import {
-  FileText,
-  BarChart3,
-  Wrench,
-  Zap,
-  Newspaper,
-  LogOut,
-  Home,
-  AlertCircle,
-  CheckCircle,
-  TrendingUp,
-  Settings,
-  Menu,
-  X,
+  FileText, BarChart3, Wrench, Zap, Newspaper, LogOut,
+  Home, AlertCircle, CheckCircle, TrendingUp, Settings, Menu, X,
 } from "lucide-react"
 
-interface UserInfo {
-  userId: string
-  name: string
-  email: string
-}
-
+interface UserInfo { userId: string; name: string; email: string }
 interface DashboardSection {
-  id: string
-  title: string
-  description: string
-  icon: React.ReactNode
-  color: string
-  features: string[]
+  id: string; title: string; description: string
+  icon: React.ReactNode; color: string; features: string[]
+}
+interface LiveStats {
+  total_grievances: number
+  resolved_grievances: number
+  in_progress_grievances: number
+  open_work_orders: number
 }
 
 export function UnifiedDashboard() {
@@ -42,6 +28,10 @@ export function UnifiedDashboard() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("overview")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [stats, setStats] = useState<LiveStats>({
+    total_grievances: 0, resolved_grievances: 0,
+    in_progress_grievances: 0, open_work_orders: 0
+  })
   const router = useRouter()
 
   useEffect(() => {
@@ -50,17 +40,32 @@ export function UnifiedDashboard() {
       .split("; ")
       .find((row) => row.startsWith("civilio-user="))
       ?.split("=")[1]
-
     if (userCookie) {
-      try {
-        const user = JSON.parse(decodeURIComponent(userCookie))
-        setUserInfo(user)
-      } catch (error) {
-        console.error("[v0] Error parsing user cookie:", error)
-      }
+      try { setUserInfo(JSON.parse(decodeURIComponent(userCookie))) } catch { }
     }
-
     setLoading(false)
+  }, [])
+
+  // ── Fetch live stats from Supabase ───────────────────────────────────────
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch("/api/dashboard/stats")
+        const json = await res.json()
+        if (json.success) {
+          setStats({
+            total_grievances: json.data.grievances.total,
+            resolved_grievances: json.data.grievances.resolved,
+            in_progress_grievances: json.data.grievances.in_progress,
+            open_work_orders: json.data.work_orders.open,
+          })
+        }
+      } catch { /* graceful fail */ }
+    }
+    fetchStats()
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchStats, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleLogout = async () => {
@@ -263,8 +268,11 @@ export function UnifiedDashboard() {
           {/* Quick Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Statistics</CardTitle>
-              <CardDescription>Your civic engagement metrics</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                Quick Statistics
+                <Badge variant="outline" className="text-xs font-normal text-green-600 border-green-300">🔴 Live</Badge>
+              </CardTitle>
+              <CardDescription>Real-time civic engagement metrics from database</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -273,28 +281,28 @@ export function UnifiedDashboard() {
                     <FileText className="h-4 w-4" />
                     Grievances
                   </div>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{stats.total_grievances}</p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CheckCircle className="h-4 w-4" />
                     Resolved
                   </div>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.resolved_grievances}</p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <TrendingUp className="h-4 w-4" />
-                    Civil Points
+                    In Progress
                   </div>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.in_progress_grievances}</p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Wrench className="h-4 w-4" />
-                    Active Tasks
+                    Open Work Orders
                   </div>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold text-orange-600">{stats.open_work_orders}</p>
                 </div>
               </div>
             </CardContent>
