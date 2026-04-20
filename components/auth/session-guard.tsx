@@ -3,67 +3,53 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 interface SessionGuardProps {
   children: React.ReactNode
+  redirectTo?: string
 }
 
-export function SessionGuard({ children }: SessionGuardProps) {
+export function SessionGuard({ children, redirectTo = "/auth/login" }: SessionGuardProps) {
   const [isVerified, setIsVerified] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    const verifySession = async () => {
+    const verifySession = () => {
       try {
-        // Check if session cookie exists
-        const sessionCookie = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("civilio-session="))
-          ?.split("=")[1]
+        const cookies = document.cookie.split("; ")
+        const userCookie = cookies.find(row => row.startsWith("civilio-user="))
+        const oldSession = cookies.find(row => row.startsWith("civilio-session="))
 
-        if (!sessionCookie) {
-          router.push("/auth/login")
-          return
-        }
-
-        // Verify session with backend
-        const response = await fetch("/api/auth/verify-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId: sessionCookie }),
-        })
-
-        if (response.ok) {
+        if (userCookie || oldSession) {
           setIsVerified(true)
         } else {
-          router.push("/auth/login")
+          router.push(redirectTo)
         }
       } catch (error) {
-        console.error("[v0] Session verification error:", error)
-        router.push("/auth/login")
+        console.error("Session verification error:", error)
+        router.push(redirectTo)
       } finally {
         setIsLoading(false)
       }
     }
 
     verifySession()
-  }, [router])
+  }, [router, redirectTo])
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Verifying session...</p>
+          <p className="text-muted-foreground">Verifying your session...</p>
         </div>
       </div>
     )
   }
 
-  if (!isVerified) {
-    return null
-  }
+  if (!isVerified) return null
 
   return <>{children}</>
 }

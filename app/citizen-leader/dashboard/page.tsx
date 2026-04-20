@@ -21,7 +21,7 @@ const IndiaMap = dynamic(() => import("@/components/dashboard/india-map"), {
 })
 
 export default function CitizenLeaderDashboardPage() {
-  const { role } = useUser()
+  const { role, isLoading } = useUser()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("dashboard")
   const [grievances, setGrievances] = useState([
@@ -67,10 +67,10 @@ export default function CitizenLeaderDashboardPage() {
   ])
 
   useEffect(() => {
-    if (role !== "citizen-leader") {
+    if (!isLoading && role !== "citizen-leader") {
       router.push("/login")
     }
-  }, [role, router])
+  }, [role, isLoading, router])
 
   const handleGrievanceSubmit = (formData: any) => {
     const newGrievance = {

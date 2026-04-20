@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertCircle, BarChart3, Shield, TrendingUp, Newspaper, Zap } from "lucide-react"
 
 export default function CitizenPortalPage() {
-  const { role } = useUser()
+  const { role, isLoading } = useUser()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("submit")
   const [grievances, setGrievances] = useState([
@@ -35,10 +35,10 @@ export default function CitizenPortalPage() {
   ])
 
   useEffect(() => {
-    if (role !== "citizen") {
+    if (!isLoading && role !== "citizen") {
       router.push("/login")
     }
-  }, [role, router])
+  }, [role, isLoading, router])
 
   const handleSubmit = (formData: any) => {
     const newGrievance = {

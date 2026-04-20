@@ -1,6 +1,7 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { supabase } from "@/lib/supabase"
 
 export type UserRole = "citizen-leader" | "citizen" | "worker" | "chief_minister" | "district_magistrate" | "deputy_district_magistrate" | "mayor" | "municipal_commissioner" | "department_head" | null
 
@@ -43,6 +44,7 @@ interface UserContextType {
   role: UserRole
   userId?: string
   adminProfile?: AdminProfile
+  isLoading: boolean
   login: (role: UserRole, userId?: string, adminProfile?: AdminProfile) => void
   logout: () => void
   updateAdminProfile: (profile: AdminProfile) => void
@@ -66,6 +68,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole>(null)
   const [userId, setUserId] = useState<string>()
   const [adminProfile, setAdminProfile] = useState<AdminProfile>()
+  const [isLoading, setIsLoading] = useState(true)
+
+  // ── Bootstrap from cookies on load ──────────────────────────────
+  useEffect(() => {
+    function bootstrap() {
+      try {
+        const cookies = document.cookie.split("; ")
+        const userCookie = cookies.find(row => row.startsWith("civilio-user="))
+
+        if (userCookie) {
+          const userData = JSON.parse(decodeURIComponent(userCookie.split("=")[1]))
+          const roleFromCookie = userData.role || "citizen"
+          const mappedRole: UserRole =
+            roleFromCookie === "official" ? "citizen-leader" :
+              roleFromCookie === "vendor" ? "worker" :
+                "citizen"
+          setRole(mappedRole)
+          setUserId(userData.userId)
+        } else {
+          setRole(null)
+          setUserId(undefined)
+        }
+      } catch (err) {
+        console.error("Failed to parse user cookie", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    bootstrap()
+  }, [])
 
   const login = (newRole: UserRole, newUserId?: string, newAdminProfile?: AdminProfile) => {
     setRole(newRole)
@@ -91,13 +123,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const canAccessJurisdiction = (jurisdictionId: number): boolean => {
     if (!adminProfile) return false
-    
+
     // Admin can access their own jurisdiction
     if (adminProfile.jurisdiction.id === jurisdictionId) return true
-    
+
     // Chief Minister can access all jurisdictions
     if (adminProfile.adminRole === "chief_minister") return true
-    
+
     // Check if it's a child jurisdiction
     return checkJurisdictionHierarchy(adminProfile.jurisdiction.id, jurisdictionId)
   }
@@ -119,6 +151,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         role,
         userId,
         adminProfile,
+        isLoading,
         login,
         logout,
         updateAdminProfile,
@@ -142,7 +175,7 @@ export function useUser() {
 
 export function useAdminAuth() {
   const { adminProfile, hasPermission, canAccessJurisdiction } = useUser()
-  
+
   if (!adminProfile) {
     throw new Error("useAdminAuth must be used within an admin context")
   }

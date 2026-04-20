@@ -24,19 +24,21 @@ interface WorkOrder {
 }
 
 export default function WorkerDashboard() {
-  const { role, logout } = useUser()
+  const { role, isLoading, logout } = useUser()
   const router = useRouter()
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [selectedTab, setSelectedTab] = useState("assigned")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (role !== "worker") {
+    if (!isLoading && role !== "worker") {
       router.push("/login")
       return
     }
-    fetchWorkOrders()
-  }, [role, router])
+    if (!isLoading && role === "worker") {
+      fetchWorkOrders()
+    }
+  }, [role, isLoading, router])
 
   const fetchWorkOrders = async () => {
     // Mock data - replace with actual API call

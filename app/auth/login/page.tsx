@@ -102,39 +102,34 @@ export default function AuthPortalPage() {
     setLoading(true)
 
     try {
-      if (mode === "signup") {
-        const { data, error: signUpError } = await supabase.auth.signUp({
+      const response = await fetch("/api/auth/universal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name || form.email.split("@")[0] || "Anonymous",
           email: form.email,
-          password: form.password,
-          options: {
-            data: {
-              name: form.name,
-              role: selectedRole,
-              id_proof_type: form.id_proof_type,
-              id_proof_value: form.id_proof_value.trim().toUpperCase(),
-              extra_proofs: form.extra_proofs,
-              registered_at: new Date().toISOString()
-            }
-          }
+          credential: form.password
         })
-        if (signUpError) throw signUpError
-        if (data.session) {
-          // Auto-confirmed
-          setSession(data.user?.id, form.name, form.email, selectedRole!)
-          router.push("/dashboard")
-        } else {
-          setSuccess("✅ Account created! Check your email to verify and then sign in.")
-          setMode("login")
-        }
-      } else {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email: form.email,
-          password: form.password
-        })
-        if (signInError) throw signInError
-        setSession(data.user.id, data.user.user_metadata?.name || form.name, form.email, selectedRole!)
-        router.push("/dashboard")
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Authentication failed")
       }
+
+      const roleToUse = selectedRole || "citizen"
+      setSessionCookie(data.userId, form.name || "Anonymous", form.email, roleToUse)
+
+      // Portal redirection based on role
+      if (roleToUse === "official") {
+        window.location.href = "/citizen-leader/dashboard"
+      } else if (roleToUse === "vendor") {
+        window.location.href = "/worker/dashboard"
+      } else {
+        window.location.href = "/citizen-portal"
+      }
+
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.")
     } finally {
@@ -142,7 +137,7 @@ export default function AuthPortalPage() {
     }
   }
 
-  function setSession(userId: string, name: string, email: string, role: string) {
+  function setSessionCookie(userId: string, name: string, email: string, role: string) {
     document.cookie = `civilio-user=${encodeURIComponent(
       JSON.stringify({ userId, name, email, role })
     )}; path=/; max-age=86400`
