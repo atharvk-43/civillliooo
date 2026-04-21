@@ -23,11 +23,11 @@ type Message = {
 
 // ─── Suggested Quick Questions ────────────────────────────────────────────────
 const QUICK_QUESTIONS = [
-    "🪪 How do I apply for a PAN card?",
-    "🗳️ How to register for Voter ID?",
-    "📋 What documents are needed for Aadhaar?",
-    "📝 How to file a civic grievance online?",
-    "🏗️ Latest infrastructure projects in India?",
+    "How do I apply for a PAN card?",
+    "How to register for Voter ID?",
+    "What documents are needed for Aadhaar?",
+    "How to file a civic grievance online?",
+    "Latest infrastructure projects in India?",
 ]
 
 // ─── Simple Markdown-like formatter ──────────────────────────────────────────
@@ -175,7 +175,7 @@ export function Chatbot() {
 
         const history = [...messages, userMessage].map(m => ({
             role: m.role,
-            parts: [{ type: "text", text: m.content }]
+            content: m.content
         }))
 
         const assistantId = (Date.now() + 1).toString()
@@ -241,7 +241,7 @@ export function Chatbot() {
                 {/* Tooltip hint when closed */}
                 {!isOpen && messages.length === 0 && (
                     <div className="animate-bounce-slow bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 text-xs font-medium px-3 py-1.5 rounded-full shadow-lg border border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
-                        Ask CiviBot anything ✨
+                        Ask CiviBot anything
                     </div>
                 )}
 
@@ -368,7 +368,7 @@ export function Chatbot() {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-white font-bold text-lg">Hi, I'm CiviBot! 👋</h3>
+                                    <h3 className="text-white font-bold text-lg">Hello, I'm CiviBot</h3>
                                     <p className="text-white/40 text-sm mt-1 leading-relaxed">
                                         Your AI assistant for Indian civic services.<br />I search the web in real-time!
                                     </p>

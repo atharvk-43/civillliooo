@@ -62,19 +62,19 @@ export async function POST(req: Request) {
         const { messages } = await req.json();
 
         if (!process.env.GROQ_API_KEY) {
-            return new Response(JSON.stringify({ error: "Missing GROQ_API_KEY in .env.local" }), { status: 401 });
+            console.error('[v0] Missing GROQ_API_KEY');
+            return new Response(JSON.stringify({ error: "Missing GROQ_API_KEY" }), { status: 401 });
         }
 
-        const modelMessages = await convertToModelMessages(messages);
-
-        // Get the latest user message
-        const lastUserMessage = messages
-            .filter((m: any) => m.role === 'user')
-            .pop();
-        const userText = lastUserMessage?.parts
-            ?.filter((p: any) => p.type === 'text')
-            ?.map((p: any) => p.text)
-            ?.join(' ') ?? '';
+        // Extract text from the latest user message
+        const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop();
+        let userText = '';
+        
+        if (lastUserMessage?.content) {
+            userText = typeof lastUserMessage.content === 'string' 
+                ? lastUserMessage.content 
+                : lastUserMessage.content;
+        }
 
         // Decide whether to search the web
         let webContext = '';
@@ -85,19 +85,25 @@ export async function POST(req: Request) {
 
         // Build dynamic system prompt with optional web context
         const systemPrompt = webContext
-            ? `${SYSTEM_PROMPT}\n\n🌐 LIVE WEB SEARCH RESULTS (use this to answer accurately):\n\n${webContext}\n\nBased on the above real-time data, provide a comprehensive, well-structured answer.`
+            ? `${SYSTEM_PROMPT}\n\nLIVE WEB SEARCH RESULTS (use this to answer accurately):\n\n${webContext}\n\nBased on the above real-time data, provide a comprehensive, well-structured answer.`
             : SYSTEM_PROMPT;
+
+        // Prepare messages in correct format for groq
+        const formattedMessages = messages.map((msg: any) => ({
+            role: msg.role,
+            content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+        }));
 
         const result = streamText({
             model: groq('llama-3.3-70b-versatile'),
-            messages: modelMessages,
+            messages: formattedMessages,
             system: systemPrompt,
             temperature: 0.3
         });
 
         return result.toUIMessageStreamResponse();
     } catch (error) {
-        console.error("Chat API Error:", error);
+        console.error("[v0] Chat API Error:", error);
         return new Response(JSON.stringify({ error: "Failed to process chat request" }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
