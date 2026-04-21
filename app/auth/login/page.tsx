@@ -18,7 +18,8 @@ const ROLES = [
     subtitle: "I am a resident",
     description: "Submit grievances, track civic issues, and engage with city services",
     icon: Users,
-    badge: "🏘️",
+    color: "from-cyan-400 to-blue-500",
+    glowColor: "cyan",
     idProofs: [
       { id: "aadhaar", label: "Aadhaar Card Number", placeholder: "XXXX XXXX XXXX", pattern: "\\d{4}\\s?\\d{4}\\s?\\d{4}", hint: "12-digit Aadhaar number" },
       { id: "voter_id", label: "Voter ID Card (EPIC)", placeholder: "ABC1234567", hint: "10-character alphanumeric EPIC number" },
@@ -31,7 +32,8 @@ const ROLES = [
     subtitle: "I am a public servant",
     description: "Manage governance, review grievances, and coordinate policy and administration",
     icon: Landmark,
-    badge: "🏛️",
+    color: "from-purple-400 to-pink-500",
+    glowColor: "purple",
     idProofs: [
       { id: "aadhaar_passport", label: "Aadhaar / Passport Number", placeholder: "Enter Aadhaar or Passport number", hint: "For identity verification" },
       { id: "posting_order", label: "Official Posting Order / Secretariat ID", placeholder: "e.g. MHA/2024/PO/00123", hint: "Issued by your ministry or department" },
@@ -44,7 +46,8 @@ const ROLES = [
     subtitle: "I am a contractor or supplier",
     description: "Access work orders, submit bids, and manage contracts with municipal authorities",
     icon: HardHat,
-    badge: "🛠️",
+    color: "from-emerald-400 to-green-500",
+    glowColor: "emerald",
     idProofs: [
       { id: "gstin", label: "GST Registration (GSTIN)", placeholder: "22AAAAA0000A1Z5", hint: "15-digit alphanumeric GSTIN" },
       { id: "msme", label: "MSME / Udyam Registration Number", placeholder: "UDYAM-XX-00-0000000", hint: "Udyam Registration Certificate number" },
@@ -134,20 +137,36 @@ export default function AuthPortalPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col bg-black">
-      {/* Subtle geometric background */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+      {/* Neon glow background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-1/4 w-80 h-80 bg-cyan-500 rounded-full blur-3xl opacity-10 animate-pulse" />
+        <div className="absolute top-40 right-1/3 w-72 h-72 bg-purple-500 rounded-full blur-3xl opacity-10 animate-pulse" style={{ animationDelay: "0.5s" }} />
+        <div className="absolute bottom-20 left-1/3 w-96 h-96 bg-emerald-500 rounded-full blur-3xl opacity-10 animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute bottom-40 right-1/4 w-80 h-80 bg-pink-500 rounded-full blur-3xl opacity-10 animate-pulse" style={{ animationDelay: "1.5s" }} />
       </div>
 
-      {/* Elegant grid pattern */}
-      <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(90deg,#fff_1px,transparent_1px),linear-gradient(0deg,#fff_1px,transparent_1px)] bg-[length:50px_50px]" />
+      {/* Subtle grid */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(90deg,#fff_1px,transparent_1px),linear-gradient(0deg,#fff_1px,transparent_1px)] bg-[length:60px_60px]" />
 
       <style>{`
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes glow { 0%, 100% { opacity: 0.08; } 50% { opacity: 0.15; } }
         .slide-up { animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .neon-border { position: relative; }
+        .neon-border::before { 
+          content: ''; 
+          position: absolute; 
+          inset: 0; 
+          border-radius: inherit; 
+          padding: 1px; 
+          background: linear-gradient(135deg, currentColor, transparent); 
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); 
+          -webkit-mask-composite: xor; 
+          mask-composite: exclude; 
+          opacity: 0.3;
+        }
       `}</style>
 
       {/* Header */}
@@ -189,28 +208,48 @@ export default function AuthPortalPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
               {ROLES.map((role, i) => {
                 const Icon = role.icon
                 return (
                   <button
                     key={role.id}
                     onClick={() => handleRoleSelect(role.id)}
-                    className="group relative text-left p-8 rounded-2xl border border-white/10 transition-all duration-300 hover:border-white/30 hover:bg-white/2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white"
-                    style={{ animationDelay: `${i * 100}ms` }}
+                    className={`group relative text-left p-8 rounded-2xl border transition-all duration-300 cursor-pointer outline-none focus-visible:ring-2 overflow-hidden`}
+                    style={{ 
+                      animationDelay: `${i * 100}ms`,
+                      borderColor: `rgba(255, 255, 255, 0.1)`,
+                    }}
+                    onMouseEnter={(e) => {
+                      const card = e.currentTarget;
+                      const colors: Record<string, string> = {
+                        citizen: 'rgba(34, 211, 238, 0.3)',
+                        official: 'rgba(216, 180, 254, 0.3)',
+                        vendor: 'rgba(52, 211, 153, 0.3)',
+                      };
+                      card.style.borderColor = colors[role.id!] || 'rgba(255, 255, 255, 0.3)';
+                      card.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                    }}
+                    onMouseLeave={(e) => {
+                      const card = e.currentTarget;
+                      card.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      card.style.backgroundColor = 'transparent';
+                    }}
                   >
-                    {/* Hover background */}
-                    <div className="absolute inset-0 bg-white/2 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    {/* Neon glow background */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${role.color} rounded-2xl opacity-0 group-hover:opacity-5 transition-opacity duration-300 blur-xl` } />
+                    
+                    {/* Border glow effect */}
+                    <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-gradient-to-br ${role.color}` } style={{ boxShadow: `inset 0 0 20px ${role.glowColor}33` }} />
 
-                    <div className="relative">
-                      <span className="text-5xl mb-6 block">{role.badge}</span>
-                      <div className="h-12 w-12 rounded-xl bg-white mb-6 flex items-center justify-center">
-                        <Icon className="h-6 w-6 text-black" />
+                    <div className="relative z-10">
+                      <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${role.color} mb-6 flex items-center justify-center shadow-lg group-hover:shadow-2xl transition-shadow duration-300`} style={{ boxShadow: `0 0 20px ${role.glowColor}44` }}>
+                        <Icon className="h-7 w-7 text-white" />
                       </div>
                       <h3 className="text-white font-bold text-xl mb-2">{role.title}</h3>
-                      <p className="text-white/50 text-sm mb-1 font-medium">{role.subtitle}</p>
+                      <p className="text-white/60 text-sm mb-1 font-medium">{role.subtitle}</p>
                       <p className="text-white/40 text-sm leading-relaxed mb-6">{role.description}</p>
-                      <div className="flex items-center gap-2 text-white text-sm font-semibold group-hover:gap-3 transition-all">
+                      <div className={`flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r ${role.color} text-sm font-semibold group-hover:gap-3 transition-all`}>
                         Access Portal <ChevronRight className="h-4 w-4" />
                       </div>
                     </div>
@@ -238,13 +277,18 @@ export default function AuthPortalPage() {
             </button>
 
             {/* Card */}
-            <div className="rounded-2xl border border-white/10 overflow-hidden bg-white/2 backdrop-blur-sm">
+            <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/40 backdrop-blur-md relative group" style={{
+              boxShadow: roleConfig ? `0 0 40px ${roleConfig.glowColor}22` : 'none'
+            }}>
+              {/* Neon border glow */}
+              <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-gradient-to-br ${roleConfig?.color || 'from-white to-white'}`} style={{ boxShadow: `inset 0 0 30px ${roleConfig?.glowColor}44` }} />
+              
               {/* Card Header */}
-              <div className="px-8 py-8 border-b border-white/5">
+              <div className="relative z-10 px-8 py-8 border-b border-white/5">
                 <div className="flex items-center gap-4 mb-6">
                   {roleConfig && (
-                    <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center">
-                      <roleConfig.icon className="h-6 w-6 text-black" />
+                    <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${roleConfig.color} flex items-center justify-center shadow-lg`} style={{ boxShadow: `0 0 20px ${roleConfig.glowColor}44` }}>
+                      <roleConfig.icon className="h-6 w-6 text-white" />
                     </div>
                   )}
                   <div>
@@ -269,7 +313,7 @@ export default function AuthPortalPage() {
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="px-8 py-8 space-y-5">
+              <form onSubmit={handleSubmit} className="relative z-10 px-8 py-8 space-y-5">
                 {success && (
                   <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex gap-3 text-sm text-green-300">
                     <CheckCircle className="h-5 w-5 shrink-0 mt-0.5" />
@@ -364,15 +408,21 @@ export default function AuthPortalPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 rounded-xl font-semibold text-black text-base flex items-center justify-center gap-2 transition-all duration-300 bg-white hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                  className="w-full h-12 rounded-xl font-semibold text-white text-base flex items-center justify-center gap-2 transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 hover:-translate-y-1 hover:shadow-2xl active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed mt-6 relative overflow-hidden group"
+                  style={{
+                    boxShadow: '0 0 30px rgba(99, 102, 241, 0.3)'
+                  }}
                 >
-                  {loading ? (
-                    <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
-                  ) : mode === "signup" ? (
-                    <><CheckCircle className="h-5 w-5" /> Create Account</>
-                  ) : (
-                    <>Sign In</>
-                  )}
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                  <span className="relative flex items-center justify-center gap-2">
+                    {loading ? (
+                      <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
+                    ) : mode === "signup" ? (
+                      <><CheckCircle className="h-5 w-5" /> Create Account</>
+                    ) : (
+                      <>Sign In</>
+                    )}
+                  </span>
                 </button>
               </form>
             </div>
@@ -380,22 +430,23 @@ export default function AuthPortalPage() {
             <style>{`
               .auth-input {
                 width: 100%;
-                background: rgba(255, 255, 255, 0.04);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
                 border-radius: 0.75rem;
                 padding: 0.75rem 1rem;
                 color: white;
                 font-size: 0.875rem;
                 outline: none;
-                transition: all 0.2s ease;
+                transition: all 0.3s ease;
+                position: relative;
               }
               .auth-input::placeholder { 
-                color: rgba(255, 255, 255, 0.3); 
+                color: rgba(255, 255, 255, 0.25); 
               }
               .auth-input:focus { 
-                border-color: rgba(255, 255, 255, 0.3);
-                background: rgba(255, 255, 255, 0.08);
-                box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+                border-color: rgba(255, 255, 255, 0.4);
+                background: rgba(255, 255, 255, 0.06);
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.2), inset 0 0 20px rgba(99, 102, 241, 0.05);
               }
             `}</style>
 
