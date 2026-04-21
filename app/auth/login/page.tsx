@@ -5,14 +5,12 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import {
   Users, Landmark, HardHat, ChevronRight, ArrowLeft,
-  CheckCircle, AlertCircle, Loader2, Eye, EyeOff, Shield
+  CheckCircle, AlertCircle, Loader2, Eye, EyeOff, Shield, Sparkles
 } from "lucide-react"
 
-// ─── Types ───────────────────────────────────────────────────────────────────
 type Role = "citizen" | "official" | "vendor" | null
 type Mode = "signup" | "login"
 
-// ─── Role Config ──────────────────────────────────────────────────────────────
 const ROLES = [
   {
     id: "citizen" as Role,
@@ -20,8 +18,6 @@ const ROLES = [
     subtitle: "I am a resident",
     description: "Submit grievances, track civic issues, and engage with city services",
     icon: Users,
-    gradient: "from-blue-500 to-indigo-600",
-    bg: "hover:bg-blue-50 dark:hover:bg-blue-950/30 group-hover:border-blue-400",
     badge: "🏘️",
     idProofs: [
       { id: "aadhaar", label: "Aadhaar Card Number", placeholder: "XXXX XXXX XXXX", pattern: "\\d{4}\\s?\\d{4}\\s?\\d{4}", hint: "12-digit Aadhaar number" },
@@ -35,8 +31,6 @@ const ROLES = [
     subtitle: "I am a public servant",
     description: "Manage governance, review grievances, and coordinate policy and administration",
     icon: Landmark,
-    gradient: "from-violet-500 to-purple-700",
-    bg: "hover:bg-violet-50 dark:hover:bg-violet-950/30 group-hover:border-violet-400",
     badge: "🏛️",
     idProofs: [
       { id: "aadhaar_passport", label: "Aadhaar / Passport Number", placeholder: "Enter Aadhaar or Passport number", hint: "For identity verification" },
@@ -50,8 +44,6 @@ const ROLES = [
     subtitle: "I am a contractor or supplier",
     description: "Access work orders, submit bids, and manage contracts with municipal authorities",
     icon: HardHat,
-    gradient: "from-amber-500 to-orange-600",
-    bg: "hover:bg-amber-50 dark:hover:bg-amber-950/30 group-hover:border-amber-400",
     badge: "🛠️",
     idProofs: [
       { id: "gstin", label: "GST Registration (GSTIN)", placeholder: "22AAAAA0000A1Z5", hint: "15-digit alphanumeric GSTIN" },
@@ -62,7 +54,6 @@ const ROLES = [
   }
 ]
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 export default function AuthPortalPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const [selectedRole, setSelectedRole] = useState<Role>(null)
@@ -73,7 +64,6 @@ export default function AuthPortalPage() {
   const [success, setSuccess] = useState("")
   const router = useRouter()
 
-  // Form state
   const [form, setForm] = useState({
     name: "", email: "", password: "",
     id_proof_type: "", id_proof_value: "",
@@ -121,7 +111,6 @@ export default function AuthPortalPage() {
       const roleToUse = selectedRole || "citizen"
       setSessionCookie(data.userId, form.name || "Anonymous", form.email, roleToUse)
 
-      // Portal redirection based on role
       if (roleToUse === "official") {
         window.location.href = "/citizen-leader/dashboard"
       } else if (roleToUse === "vendor") {
@@ -144,119 +133,134 @@ export default function AuthPortalPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col" style={{
-      background: "linear-gradient(135deg, #0f0c29 0%, #1a1040 50%, #141030 100%)"
-    }}>
-      {/* Ambient glows */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-purple-600/10 blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full bg-blue-600/5 blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+    <div className="min-h-screen relative overflow-hidden flex flex-col bg-black">
+      {/* Subtle geometric background */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+      </div>
+
+      {/* Elegant grid pattern */}
+      <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(90deg,#fff_1px,transparent_1px),linear-gradient(0deg,#fff_1px,transparent_1px)] bg-[length:50px_50px]" />
 
       <style>{`
-        @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-        .fade-up { animation: fadeUp 0.4s cubic-bezier(0.23,1,0.32,1) forwards; }
-        .fade-in { animation: fadeIn 0.3s ease forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .slide-up { animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
       `}</style>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-5">
+      <header className="relative z-10 flex items-center justify-between px-8 py-6 border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}>
-            <Shield className="h-4 w-4 text-white" />
+          <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center">
+            <Shield className="h-5 w-5 text-black" />
           </div>
-          <span className="text-white font-bold text-lg tracking-tight">Civillio</span>
+          <div className="flex flex-col">
+            <span className="text-white font-bold text-lg tracking-tight">Civillio</span>
+            <span className="text-white/40 text-[10px] font-medium uppercase tracking-wider">Smart Governance</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-white/40 text-xs">
-          <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${step >= 1 ? "bg-purple-500 text-white" : "bg-white/10"}`}>1</span>
-          <div className={`w-8 h-px transition-all ${step >= 2 ? "bg-purple-500" : "bg-white/20"}`} />
-          <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${step >= 2 ? "bg-purple-500 text-white" : "bg-white/10"}`}>2</span>
+        
+        {/* Step indicator */}
+        <div className="flex items-center gap-3">
+          <div className={`h-2 w-8 rounded-full transition-all duration-300 ${step >= 1 ? "bg-white" : "bg-white/20"}`} />
+          <span className="text-white/60 text-xs font-medium">{step} / 2</span>
+          <div className={`h-2 w-8 rounded-full transition-all duration-300 ${step >= 2 ? "bg-white" : "bg-white/20"}`} />
         </div>
       </header>
 
       {/* Content */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-12">
         {step === 1 ? (
-          // ─── STEP 1: Role Selection ────────────────────────────────────────
-          <div className="w-full max-w-3xl fade-up">
-            <div className="text-center mb-10">
-              <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3">
-                Welcome to <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Civillio</span>
+          // STEP 1: Role Selection
+          <div className="w-full max-w-5xl">
+            <div className="text-center mb-16 slide-up">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Sparkles className="h-5 w-5 text-white/60" />
+                <span className="text-white/60 text-sm font-medium uppercase tracking-widest">Welcome</span>
+                <Sparkles className="h-5 w-5 text-white/60" />
+              </div>
+              <h1 className="text-5xl sm:text-6xl font-bold text-white tracking-tight mb-4 leading-tight">
+                Access Your Civic Platform
               </h1>
-              <p className="text-white/50 text-lg">India's smart civic engagement platform. Who are you?</p>
+              <p className="text-white/50 text-lg font-light max-w-2xl mx-auto">
+                Select your role to continue to Civillio, India&apos;s smart governance platform
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               {ROLES.map((role, i) => {
                 const Icon = role.icon
                 return (
                   <button
                     key={role.id}
                     onClick={() => handleRoleSelect(role.id)}
-                    className="group relative text-left p-6 rounded-2xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      borderColor: "rgba(255,255,255,0.08)",
-                      animationDelay: `${i * 80}ms`
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(139,92,246,0.4)")}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
+                    className="group relative text-left p-8 rounded-2xl border border-white/10 transition-all duration-300 hover:border-white/30 hover:bg-white/2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    style={{ animationDelay: `${i * 100}ms` }}
                   >
-                    {/* Gradient glow on hover */}
-                    <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${role.gradient} blur-xl -z-10 scale-110`} />
+                    {/* Hover background */}
+                    <div className="absolute inset-0 bg-white/2 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    <span className="text-4xl mb-4 block">{role.badge}</span>
-                    <div className={`inline-flex items-center justify-center h-12 w-12 rounded-xl mb-4 bg-gradient-to-br ${role.gradient} shadow-lg`}>
-                      <Icon className="h-6 w-6 text-white" />
-                    </div>
-                    <h3 className="text-white font-bold text-xl mb-1">{role.title}</h3>
-                    <p className="text-white/40 text-sm mb-1">{role.subtitle}</p>
-                    <p className="text-white/30 text-xs leading-relaxed mb-5">{role.description}</p>
-                    <div className="flex items-center gap-1 text-purple-400 text-sm font-semibold group-hover:gap-2 transition-all">
-                      Continue <ChevronRight className="h-4 w-4" />
+                    <div className="relative">
+                      <span className="text-5xl mb-6 block">{role.badge}</span>
+                      <div className="h-12 w-12 rounded-xl bg-white mb-6 flex items-center justify-center">
+                        <Icon className="h-6 w-6 text-black" />
+                      </div>
+                      <h3 className="text-white font-bold text-xl mb-2">{role.title}</h3>
+                      <p className="text-white/50 text-sm mb-1 font-medium">{role.subtitle}</p>
+                      <p className="text-white/40 text-sm leading-relaxed mb-6">{role.description}</p>
+                      <div className="flex items-center gap-2 text-white text-sm font-semibold group-hover:gap-3 transition-all">
+                        Access Portal <ChevronRight className="h-4 w-4" />
+                      </div>
                     </div>
                   </button>
                 )
               })}
             </div>
 
-            <p className="text-center text-white/25 text-xs mt-8">
-              © 2026 Civillio — Smart Governance Platform for India
-            </p>
+            <div className="text-center border-t border-white/5 pt-8">
+              <p className="text-white/30 text-xs font-light">
+                © 2026 Civillio — Secure. Transparent. Democratic.
+              </p>
+            </div>
           </div>
         ) : (
-          // ─── STEP 2: Auth Form ─────────────────────────────────────────────
-          <div className="w-full max-w-lg fade-up">
+          // STEP 2: Auth Form
+          <div className="w-full max-w-lg slide-up">
             {/* Back button */}
-            <button onClick={handleBack} className="flex items-center gap-2 text-white/40 hover:text-white/80 text-sm mb-6 transition-colors group">
-              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-              Choose a different role
+            <button 
+              onClick={handleBack} 
+              className="flex items-center gap-2 text-white/50 hover:text-white text-sm mb-8 transition-colors group"
+            >
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+              Choose different role
             </button>
 
             {/* Card */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div className="rounded-2xl border border-white/10 overflow-hidden bg-white/2 backdrop-blur-sm">
               {/* Card Header */}
-              <div className="px-7 py-6" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                <div className="flex items-center gap-3 mb-3">
+              <div className="px-8 py-8 border-b border-white/5">
+                <div className="flex items-center gap-4 mb-6">
                   {roleConfig && (
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${roleConfig.gradient}`}>
-                      <roleConfig.icon className="h-5 w-5 text-white" />
+                    <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center">
+                      <roleConfig.icon className="h-6 w-6 text-black" />
                     </div>
                   )}
                   <div>
-                    <h2 className="text-white font-bold text-xl">{roleConfig?.title} Portal</h2>
-                    <p className="text-white/40 text-xs">{roleConfig?.subtitle}</p>
+                    <h2 className="text-white font-bold text-2xl">{roleConfig?.title}</h2>
+                    <p className="text-white/40 text-sm">{roleConfig?.subtitle}</p>
                   </div>
                 </div>
+
                 {/* Login / Signup toggle */}
-                <div className="flex gap-1 p-1 rounded-xl mt-4" style={{ background: "rgba(0,0,0,0.3)" }}>
+                <div className="flex gap-2 p-1.5 rounded-xl bg-white/5 border border-white/10">
                   {(["signup", "login"] as Mode[]).map(m => (
                     <button
                       key={m}
                       type="button"
                       onClick={() => { setMode(m); setError(""); setSuccess("") }}
-                      className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${mode === m ? "text-white shadow-md" : "text-white/40 hover:text-white/70"}`}
-                      style={mode === m ? { background: "linear-gradient(135deg,#6366f1,#7c3aed)" } : {}}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${mode === m ? "text-black bg-white shadow-lg" : "text-white/60 hover:text-white"}`}
                     >
                       {m === "signup" ? "New Account" : "Sign In"}
                     </button>
@@ -265,17 +269,17 @@ export default function AuthPortalPage() {
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="px-7 py-6 space-y-4">
+              <form onSubmit={handleSubmit} className="px-8 py-8 space-y-5">
                 {success && (
-                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 flex gap-2 text-sm text-green-300">
-                    <CheckCircle className="h-4 w-4 shrink-0 mt-0.5 text-green-400" />
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex gap-3 text-sm text-green-300">
+                    <CheckCircle className="h-5 w-5 shrink-0 mt-0.5" />
                     <p>{success}</p>
                   </div>
                 )}
 
                 {/* Common fields */}
                 {mode === "signup" && (
-                  <FormField label="Full Name *">
+                  <FormField label="Full Name">
                     <input
                       required
                       placeholder="Enter your full name"
@@ -286,43 +290,46 @@ export default function AuthPortalPage() {
                   </FormField>
                 )}
 
-                <FormField label="Email Address *">
+                <FormField label="Email Address">
                   <input
                     type="email"
                     required
-                    placeholder="Enter your email"
+                    placeholder="your@email.com"
                     value={form.email}
                     onChange={e => setForm({ ...form, email: e.target.value })}
                     className="auth-input"
                   />
                 </FormField>
 
-                <FormField label="Password *">
+                <FormField label="Password">
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       required
                       minLength={6}
-                      placeholder="Min. 6 characters"
+                      placeholder="Enter password (min. 6 characters)"
                       value={form.password}
                       onChange={e => setForm({ ...form, password: e.target.value })}
                       className="auth-input pr-10"
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-white/30 hover:text-white/60 transition-colors">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                    >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </FormField>
 
-                {/* Role-specific ID proof fields (only for signup) */}
+                {/* Role-specific ID proof fields */}
                 {mode === "signup" && roleConfig && (
-                  <div className="pt-1">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Shield className="h-4 w-4 text-purple-400" />
+                  <div className="pt-2">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Shield className="h-4 w-4 text-white" />
                       <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">Identity Verification</span>
                     </div>
-                    <div className="rounded-xl p-4 space-y-4" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div className="rounded-xl p-5 space-y-4 border border-white/5 bg-white/2">
                       {roleConfig.idProofs.map((proof, idx) => (
                         <FormField key={proof.id} label={proof.label} hint={proof.hint}>
                           <input
@@ -336,20 +343,20 @@ export default function AuthPortalPage() {
                                 setForm({ ...form, extra_proofs: { ...form.extra_proofs, [proof.id]: e.target.value } })
                               }
                             }}
-                            className="auth-input font-mono"
+                            className="auth-input font-mono text-xs"
                           />
                         </FormField>
                       ))}
-                      <p className="text-white/25 text-[11px] mt-2">
-                        * Primary ID is required. Other IDs help expedite verification.
+                      <p className="text-white/30 text-xs pt-1">
+                        * Primary ID is required. Additional IDs help expedite verification.
                       </p>
                     </div>
                   </div>
                 )}
 
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex gap-2 text-sm text-red-300">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-400" />
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex gap-3 text-sm text-red-300">
+                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                     <p>{error}</p>
                   </div>
                 )}
@@ -357,39 +364,43 @@ export default function AuthPortalPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 rounded-xl font-semibold text-white text-base flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-                  style={{ background: "linear-gradient(135deg,#6366f1,#7c3aed)" }}
+                  className="w-full h-12 rounded-xl font-semibold text-black text-base flex items-center justify-center gap-2 transition-all duration-300 bg-white hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                 >
                   {loading ? (
                     <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
                   ) : mode === "signup" ? (
-                    <><CheckCircle className="h-5 w-5" /> Create {roleConfig?.title} Account</>
+                    <><CheckCircle className="h-5 w-5" /> Create Account</>
                   ) : (
-                    "Sign In to Civillio →"
+                    <>Sign In</>
                   )}
                 </button>
               </form>
             </div>
 
-            {/* Global inline styles for inputs */}
             <style>{`
               .auth-input {
                 width: 100%;
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 10px;
-                padding: 10px 14px;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 0.75rem;
+                padding: 0.75rem 1rem;
                 color: white;
-                font-size: 14px;
+                font-size: 0.875rem;
                 outline: none;
-                transition: border-color 0.2s;
+                transition: all 0.2s ease;
               }
-              .auth-input::placeholder { color: rgba(255,255,255,0.25); }
-              .auth-input:focus { border-color: rgba(139,92,246,0.6); }
+              .auth-input::placeholder { 
+                color: rgba(255, 255, 255, 0.3); 
+              }
+              .auth-input:focus { 
+                border-color: rgba(255, 255, 255, 0.3);
+                background: rgba(255, 255, 255, 0.08);
+                box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+              }
             `}</style>
 
-            <p className="text-center text-white/20 text-xs mt-6">
-              All data is encrypted and stored securely. By signing up, you agree to our terms.
+            <p className="text-center text-white/30 text-xs mt-6 font-light">
+              Your data is encrypted and secured. By continuing, you agree to our terms.
             </p>
           </div>
         )}
@@ -398,13 +409,12 @@ export default function AuthPortalPage() {
   )
 }
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
 function FormField({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <label className="text-white/60 text-xs font-semibold">{label}</label>
+    <div className="space-y-2">
+      <label className="text-white/70 text-xs font-semibold uppercase tracking-wide">{label}</label>
       {children}
-      {hint && <p className="text-white/25 text-[11px]">{hint}</p>}
+      {hint && <p className="text-white/30 text-xs">{hint}</p>}
     </div>
   )
 }
